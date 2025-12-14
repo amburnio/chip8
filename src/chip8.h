@@ -13,8 +13,9 @@ typedef struct {
     unsigned short stack[16];
     unsigned short sp;
     unsigned char key[16];
-} chip8;
+} Chip8;
 
-void initialize(chip8 core);
+void initialize(Chip8 core);
+void emulate_cycle(Chip8 core);
 
 #endif

@@ -3,7 +3,7 @@
 #include <SDL3/SDL_main.h>
 #include "chip8.h"
 
-chip8 core;
+Chip8 core;
 
 const char *game_path = "/Users/zachamburn/Downloads/1-chip8-logo.ch8";
 
