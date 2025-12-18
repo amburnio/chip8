@@ -3,11 +3,11 @@
 #include <SDL3/SDL_main.h>
 #include "chip8.h"
 
-Chip8 core;
-
-const char *game_path = "/Users/zachamburn/Downloads/1-chip8-logo.ch8";
-
 int main(void) {
+    Chip8 core;
+    Chip8 *core_ptr = &core;
+    const char *game_path = "/Users/zachamburn/Downloads/1-chip8-logo.ch8";
+
     // Initialize graphics and input and create window
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("SDL_INIT failed!");
@@ -17,7 +17,7 @@ int main(void) {
     SDL_Event event;
 
     // Initialize Chip-8 core
-    initialize(core);
+    initialize(core_ptr);
 
     // Load game into memory
     FILE *rom = fopen(game_path, "rb");
