@@ -8,12 +8,17 @@
 Chip8 core;
 Chip8 *core_ptr = &core;
 
+// Debug
+unsigned int last_time = 0, current_time;
+int frames = 0;
+
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
     SDL_SetAppMetadata("Chip-8", NULL, NULL);
+    SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60"); // FPS
 
     // Initialize SDL
     if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -72,6 +77,17 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     SDL_RenderFillRect(renderer, &rect);
 
     SDL_RenderPresent(renderer);
+
+    // Debug (Print FPS)
+    current_time = SDL_GetTicks();
+    if (current_time > last_time + 1000) {
+        printf("Frames: %d\n", frames);
+        last_time = current_time;
+        frames = 0;
+    }
+    else {
+        ++frames;
+    }
 
     return SDL_APP_CONTINUE;
 }
