@@ -62,6 +62,7 @@ void emulate_cycle(Chip8 *core) {
     core->opcode = core->memory[core->pc] << 8 | core->memory[core->pc + 1];
 
     // Decode opcode
+    int x, y, n;
     switch (core->opcode & 0xF000) {
         case 0x0000:
             switch (core->opcode & 0x000F) {
@@ -85,6 +86,10 @@ void emulate_cycle(Chip8 *core) {
             }
         break;
 
+        case 0x1000: // 1NNN: Jumps to address NNN
+            core->pc = core->opcode & 0x0FFF;
+        break;
+
         case 0x6000: // 6XNN: Sets VX to NN
             core->V[(core->opcode & 0x0F00) >> 8] = core->opcode & 0x00FF;
             core->pc += 2;
@@ -96,7 +101,31 @@ void emulate_cycle(Chip8 *core) {
         break;
 
         case 0xD000: // DXYN: Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels
-            // TODO
+            y = core->V[(core->opcode & 0x00F0) >> 4] % 32;
+            n = core->opcode & 0x000F;
+            core->V[0xF] = 0;
+            for (int i = 0; i < n; ++i) {
+                x = core->V[(core->opcode & 0x0F00) >> 8] % 64;
+                if (y >= 32) break;
+                unsigned char byte = core->memory[core->I + i];
+                unsigned char mask = 0x80;
+                for (int j = 0; j < 8; ++j) {
+                    if (x >= 64) break;
+                    if (byte & mask) {
+                        if (core->display[x][y] == 1) {
+                            core->display[x][y] = 0;
+                            core->V[0xF] = 1;
+                        }
+                        else {
+                            core->display[x][y] = 1;
+                        }
+                    }
+                    mask >>= 1;
+                    ++x;
+                }
+                ++y;
+            }
+            core->pc += 2;
         break;
 
         default:

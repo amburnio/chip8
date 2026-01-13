@@ -71,6 +71,11 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
 
+    // Emulate 11 cycles per frame (~660 ips)
+    for (int i = 0; i < 11; ++i) {
+        emulate_cycle(core_ptr);
+    }
+
     // Draw pixels
     SDL_FRect pixel;
     pixel.w = pixel.h = 10;
