@@ -5,6 +5,9 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
+#define WINDOW_WIDTH 640
+#define WINDOW_HEIGHT 320
+
 Chip8 core;
 Chip8 *core_ptr = &core;
 
@@ -27,11 +30,11 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     }
 
     // Initialize window and renderer
-    if (!SDL_CreateWindowAndRenderer("Chip-8", 640, 320, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
+    if (!SDL_CreateWindowAndRenderer("Chip-8", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
         SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-    SDL_SetRenderLogicalPresentation(renderer, 640, 320, SDL_LOGICAL_PRESENTATION_DISABLED);
+    SDL_SetRenderLogicalPresentation(renderer, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_LOGICAL_PRESENTATION_DISABLED);
 
     initialize(core_ptr);
 
@@ -64,18 +67,25 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
-    SDL_FRect rect;
-
-    // Set background to black
+    // Clear screen
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
 
-    // Draw white square
+    // Draw pixels
+    SDL_FRect pixel;
+    pixel.w = pixel.h = 10;
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-    rect.x = rect.y = 0;
-    rect.w = rect.h = 10;
-    SDL_RenderFillRect(renderer, &rect);
+    for (int i = 0; i < 64; ++i) {
+        for (int j = 0; j < 32; ++j) {
+            if (core.display[i][j] == 1) {
+                pixel.x = (float) i * 10;
+                pixel.y = (float) j * 10;
+                SDL_RenderFillRect(renderer, &pixel);
+            }
+        }
+    }
 
+    // Render frame
     SDL_RenderPresent(renderer);
 
     // Debug (Print FPS)
