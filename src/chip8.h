@@ -7,7 +7,7 @@ typedef struct {
     unsigned char V[16];
     unsigned short I;
     unsigned short pc;
-    unsigned char gfx[64 * 32];
+    unsigned char display[64][32];
     unsigned char delay_timer;
     unsigned char sound_timer;
     unsigned short stack[16];

@@ -33,8 +33,10 @@ void initialize(Chip8 *core) {
     core->sound_timer = 0;
 
     // Clear display
-    for (int i = 0; i < (64 * 32); ++i) {
-        core->gfx[i] = 0;
+    for (int i = 0; i < 64; ++i) {
+        for (int j = 0; j < 32; ++j) {
+            core->display[i][j] = 0;
+        }
     }
 
     // Clear stack, registers V0-VF, and key state
@@ -64,8 +66,10 @@ void emulate_cycle(Chip8 *core) {
         case 0x0000:
             switch (core->opcode & 0x000F) {
                 case 0x0000: // 00E0: Clears the screen
-                    for (int i = 0; i < (64 * 32); ++i) {
-                        core->gfx[i] = 0;
+                    for (int i = 0; i < 64; ++i) {
+                        for (int j = 0; j < 32; ++j) {
+                            core->display[i][j] = 0;
+                        }
                     }
                     core->pc += 2;
                 break;
