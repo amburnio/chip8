@@ -13,6 +13,7 @@ typedef struct {
     unsigned short stack[16];
     unsigned short sp;
     unsigned char key[16];
+    unsigned char key_down;
 } Chip8;
 
 void initialize(Chip8 *core);

@@ -32,6 +32,7 @@ void initialize(Chip8 *core) {
     core->sp = 0;
     core->delay_timer = 0;
     core->sound_timer = 0;
+    core->key_down = 0;
 
     // Clear display
     for (int i = 0; i < 64; ++i) {
@@ -268,13 +269,35 @@ void emulate_cycle(Chip8 *core) {
 
         case 0xF000:
             switch (core->opcode & 0x00FF) {
-                case 0x000A: // FX01: A key press is awaited, and then stored in VX
-                    for (int i = 0; i <= 0xF; ++i) {
-                        if (core->key[i] == 1) {
-                            core->V[x] = i;
-                            core->pc += 2;
-                            break;
+                case 0x0007: // FX07: Sets VX to the value of the delay timer
+                    core->V[x] = core->delay_timer;
+                    core->pc += 2;
+                break;
+
+                case 0x0015: // FX15: Sets the delay timer to VX
+                    core->delay_timer = core->V[x];
+                    core->pc += 2;
+                break;
+
+                case 0x0018: // FX18: Sets the sound timer to VX
+                    core->sound_timer = core->V[x];
+                    core->pc += 2;
+                break;
+
+                case 0x000A: // FX0A: A key press is awaited, and then stored in VX
+                    if (core->key_down == 0) {
+                        for (int i = 0; i <= 0xF; ++i) {
+                            if (core->key[i] == 1) {
+                                core->V[x] = i;
+                                core->key_down = 1;
+                                break;
+                            }
                         }
+                    }
+                    // Wait to continue until after key is released
+                    else if (core->key_down == 1 && core->key[core->V[x]] == 0) {
+                        core->key_down = 0;
+                        core->pc += 2;
                     }
                 break;
 
@@ -318,15 +341,5 @@ void emulate_cycle(Chip8 *core) {
         default:
             printf("Unknown opcode: %X\n", core->opcode);
         break;
-    }
-
-    // Update timers
-    if (core->delay_timer > 0)
-        --core->delay_timer;
-
-    if (core->sound_timer > 0) {
-        if (core->sound_timer == 1)
-            printf("BEEP!\n");
-        --core->sound_timer;
     }
 }

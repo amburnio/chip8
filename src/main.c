@@ -76,6 +76,16 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
 
+    // Update timers
+    if (core.delay_timer > 0)
+        --core.delay_timer;
+
+    if (core.sound_timer > 0) {
+        if (core.sound_timer == 1)
+            printf("BEEP!\n");
+        --core.sound_timer;
+    }
+
     // Get key states
     const bool *key_states = SDL_GetKeyboardState(NULL);
     core.key[0] = key_states[SDL_SCANCODE_X];
