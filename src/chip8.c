@@ -248,8 +248,36 @@ void emulate_cycle(Chip8 *core) {
             core->pc += 2;
         break;
 
+        case 0xE000:
+            switch (core->opcode & 0x00FF) {
+                case 0x009E: // EX9E: Skips the next instruction if the key stored in VX is pressed
+                    if (core->key[core->V[x]] == 1) core->pc += 2;
+                    core->pc += 2;
+                break;
+
+                case 0x00A1: // EXA1: Skips the next instruction if the key stored in VX is not pressed
+                    if (core->key[core->V[x]] != 1) core->pc += 2;
+                    core->pc += 2;
+                break;
+
+                default:
+                    printf ("Unknown opcode [0xE000]: 0x%X\n", core->opcode);
+                break;
+            }
+        break;
+
         case 0xF000:
             switch (core->opcode & 0x00FF) {
+                case 0x000A: // FX01: A key press is awaited, and then stored in VX
+                    for (int i = 0; i <= 0xF; ++i) {
+                        if (core->key[i] == 1) {
+                            core->V[x] = i;
+                            core->pc += 2;
+                            break;
+                        }
+                    }
+                break;
+
                 case 0x001E: // FX1E: Adds VX to I, VF is not affected
                     // TODO: Add Amiga behavior
                     core->I += core->V[x];

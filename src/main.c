@@ -76,6 +76,25 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer);
 
+    // Get key states
+    const bool *key_states = SDL_GetKeyboardState(NULL);
+    core.key[0] = key_states[SDL_SCANCODE_X];
+    core.key[1] = key_states[SDL_SCANCODE_1];
+    core.key[2] = key_states[SDL_SCANCODE_2];
+    core.key[3] = key_states[SDL_SCANCODE_3];
+    core.key[4] = key_states[SDL_SCANCODE_Q];
+    core.key[5] = key_states[SDL_SCANCODE_W];
+    core.key[6] = key_states[SDL_SCANCODE_E];
+    core.key[7] = key_states[SDL_SCANCODE_A];
+    core.key[8] = key_states[SDL_SCANCODE_S];
+    core.key[9] = key_states[SDL_SCANCODE_D];
+    core.key[0xA] = key_states[SDL_SCANCODE_Z];
+    core.key[0xB] = key_states[SDL_SCANCODE_C];
+    core.key[0xC] = key_states[SDL_SCANCODE_4];
+    core.key[0xD] = key_states[SDL_SCANCODE_R];
+    core.key[0xE] = key_states[SDL_SCANCODE_F];
+    core.key[0xF] = key_states[SDL_SCANCODE_V];
+
     // Emulate 11 cycles per frame (~660 ips)
     for (int i = 0; i < 11; ++i) {
         emulate_cycle(core_ptr);
