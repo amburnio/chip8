@@ -155,37 +155,42 @@ void emulate_cycle(Chip8 *core) {
                 break;
 
                 case 0x0004: // 8XY4: Adds VY to VX
+                    tmp = core->V[x] + core->V[y];
                     core->V[x] += core->V[y];
-                    if (core->V[x] > 255) core->V[0xF] = 1;
+                    if (tmp > 255) core->V[0xF] = 1;
                     else core->V[0xF] = 0;
                     core->pc += 2;
                 break;
 
                 case 0x0005: // 8XY5: VY is subtracted from VX
+                    tmp = core->V[x];
                     core->V[x] -= core->V[y];
-                    if (core->V[x] >= core->V[y]) core->V[0xF] = 1;
+                    if (tmp >= core->V[y]) core->V[0xF] = 1;
                     else core->V[0xF] = 0;
                     core->pc += 2;
                 break;
 
                 case 0x0006: // 8XY6: Shifts VX to the right by 1
                     // TODO: Make configurable ambiguous instruction
-                    core->V[0xF] = core->V[x] & 0x01;
+                    tmp = core->V[x] & 0x01;
                     core->V[x] = core->V[x] >> 1;
+                    core->V[0xF] = tmp;
                     core->pc += 2;
                 break;
 
                 case 0x0007: // 8XY7: Sets VX to VY minus VX
+                    tmp = core->V[x];
                     core->V[x] = core->V[y] - core->V[x];
-                    if (core->V[y] >= core->V[x]) core->V[0xF] = 1;
+                    if (core->V[y] >= tmp) core->V[0xF] = 1;
                     else core->V[0xF] = 0;
                     core->pc += 2;
                 break;
 
                 case 0x000E: // 8XYE: Shifts VX to the left by 1
                     // TODO: Make configurable ambiguous instruction
-                    core->V[0xF] = core->V[x] & 0x80;
+                    tmp = (core->V[x] & 0x80) >> 7;
                     core->V[x] = core->V[x] << 1;
+                    core->V[0xF] = tmp;
                     core->pc += 2;
                 break;
 
