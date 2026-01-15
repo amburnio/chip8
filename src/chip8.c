@@ -307,6 +307,11 @@ void emulate_cycle(Chip8 *core) {
                     core->pc += 2;
                 break;
 
+                case 0x0029: // FX29: Sets I to the location of the sprite for the character in VX
+                    core->I = core->V[x] * 5;
+                    core->pc += 2;
+                break;
+
                 case 0x0033: // FX33: Stores the binary-coded decimal representation of VX
                     tmp = core->V[x];
                     for (int i = 2; i >= 0; --i) {
