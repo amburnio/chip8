@@ -129,6 +129,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     core.key[0xF] = key_states[SDL_SCANCODE_V];
 
     // Emulate 11 cycles per frame (~660 ips)
+    core.draw_flag = 0; // Only draw once per frame
     for (int i = 0; i < 11; ++i) {
         emulate_cycle(core_ptr);
     }

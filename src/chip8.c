@@ -142,16 +142,19 @@ void emulate_cycle(Chip8 *core) {
 
                 case 0x0001: // 8XY1: Sets VX to VX or VY
                     core->V[x] |= core->V[y];
+                    core->V[0xF] = 0;
                     core->pc += 2;
                 break;
 
                 case 0x0002: // 8XY2: Sets VX to VX and VY
                     core->V[x] &= core->V[y];
+                    core->V[0xF] = 0;
                     core->pc += 2;
                 break;
 
                 case 0x0003: // 8XY3: Sets VX to VX xor VY
                     core->V[x] ^= core->V[y];
+                    core->V[0xF] = 0;
                     core->pc += 2;
                 break;
 
@@ -172,10 +175,10 @@ void emulate_cycle(Chip8 *core) {
                 break;
 
                 case 0x0006: // 8XY6: Shifts VX to the right by 1
-                    // TODO: Make configurable ambiguous instruction
-                    tmp = core->V[x] & 0x01;
+                    // TODO: Make configurable ambiguous instruction, current version breaks space invaders
+                    core->V[x] = core->V[y];
                     core->V[x] = core->V[x] >> 1;
-                    core->V[0xF] = tmp;
+                    core->V[0xF] = core->V[y] & 0x01;
                     core->pc += 2;
                 break;
 
@@ -188,10 +191,10 @@ void emulate_cycle(Chip8 *core) {
                 break;
 
                 case 0x000E: // 8XYE: Shifts VX to the left by 1
-                    // TODO: Make configurable ambiguous instruction
-                    tmp = (core->V[x] & 0x80) >> 7;
+                    // TODO: Make configurable ambiguous instruction, current version breaks space invaders
+                    core->V[x] = core->V[y];
                     core->V[x] = core->V[x] << 1;
-                    core->V[0xF] = tmp;
+                    core->V[0xF] = (core->V[y] & 0x80) >> 7;
                     core->pc += 2;
                 break;
 
@@ -222,31 +225,34 @@ void emulate_cycle(Chip8 *core) {
         break;
 
         case 0xD000: // DXYN: Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels
-            core->V[0xF] = 0;
-            unsigned char byte;
-            y_coord = core->V[y] % 32;
-            for (int i = 0; i < n; ++i) {
-                x_coord = core->V[x] % 64;
-                if (y_coord >= 32) break;
-                byte = core->memory[core->I + i];
-                unsigned char mask = 0x80;
-                for (int j = 0; j < 8; ++j) {
-                    if (x_coord >= 64) break;
-                    if (byte & mask) {
-                        if (core->display[x_coord][y_coord] == 1) {
-                            core->display[x_coord][y_coord] = 0;
-                            core->V[0xF] = 1;
+            if (core->draw_flag == 0) {
+                core->V[0xF] = 0;
+                unsigned char byte;
+                y_coord = core->V[y] % 32;
+                for (int i = 0; i < n; ++i) {
+                    x_coord = core->V[x] % 64;
+                    if (y_coord >= 32) break;
+                    byte = core->memory[core->I + i];
+                    unsigned char mask = 0x80;
+                    for (int j = 0; j < 8; ++j) {
+                        if (x_coord >= 64) break;
+                        if (byte & mask) {
+                            if (core->display[x_coord][y_coord] == 1) {
+                                core->display[x_coord][y_coord] = 0;
+                                core->V[0xF] = 1;
+                            }
+                            else {
+                                core->display[x_coord][y_coord] = 1;
+                            }
                         }
-                        else {
-                            core->display[x_coord][y_coord] = 1;
-                        }
+                        mask >>= 1;
+                        ++x_coord;
                     }
-                    mask >>= 1;
-                    ++x_coord;
+                    ++y_coord;
                 }
-                ++y_coord;
+                core->draw_flag = 1;
+                core->pc += 2;
             }
-            core->pc += 2;
         break;
 
         case 0xE000:
@@ -324,7 +330,8 @@ void emulate_cycle(Chip8 *core) {
                 case 0x0055: // FX55: Stores from V0 to VX (including VX) in memory, starting at address I
                     // TODO: Make configurable ambiguous instruction
                     for (int i = 0; i <= x; ++i) {
-                        core->memory[core->I + i] = core->V[i];
+                        core->memory[core->I] = core->V[i];
+                        ++core->I;
                     }
                     core->pc += 2;
                 break;
@@ -332,7 +339,8 @@ void emulate_cycle(Chip8 *core) {
                 case 0x0065: // FX65: Fills from V0 to VX (including VX) with values from memory, starting at address I
                     // TODO: Make configurable ambiguous instruction
                     for (int i = 0; i <= x; ++i) {
-                        core->V[i] = core->memory[core->I + i];
+                        core->V[i] = core->memory[core->I];
+                        ++core->I;
                     }
                     core->pc += 2;
                 break;

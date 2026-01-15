@@ -14,6 +14,7 @@ typedef struct {
     unsigned short sp;
     unsigned char key[16];
     unsigned char key_down;
+    unsigned char draw_flag;
 } Chip8;
 
 void initialize(Chip8 *core);
