@@ -10,6 +10,10 @@
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 320
 
+#define BEEP_FREQUENCY 8000
+#define BEEP_VOLUME 0.3f
+
+
 Chip8 core;
 Chip8 *core_ptr = &core;
 
@@ -19,6 +23,10 @@ int frames = 0;
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
+static SDL_AudioStream *stream = NULL;
+static int current_sine_sample = 0;
+
+void beep();
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
@@ -26,7 +34,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "60"); // FPS
 
     // Initialize SDL
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
@@ -38,6 +46,21 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     }
     SDL_SetRenderLogicalPresentation(renderer, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_LOGICAL_PRESENTATION_DISABLED);
 
+    // Initialize audio
+    SDL_AudioSpec spec;
+    spec.channels = 1;
+    spec.format = SDL_AUDIO_F32;
+    spec.freq = BEEP_FREQUENCY;
+
+    stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
+    if (!stream) {
+        SDL_Log("Couldn't create audio stream: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+
+    SDL_ResumeAudioStreamDevice(stream);
+
+    // Initialize Chip-8 system
     initialize(core_ptr);
 
     // Load game into memory
@@ -82,7 +105,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
     if (core.sound_timer > 0) {
         if (core.sound_timer == 1)
-            printf("BEEP!\n");
+            beep();
         --core.sound_timer;
     }
 
@@ -143,5 +166,23 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result)
 {
-    // Shutdown app
+    if (stream) {
+        SDL_DestroyAudioStream(stream);
+        stream = NULL;
+    }
+}
+
+void beep() {
+    if (!stream) return;
+
+    static float samples[512];
+
+    for (int i = 0; i < SDL_arraysize(samples); ++i) {
+        const float phase = current_sine_sample * BEEP_FREQUENCY / 8000.0f;
+        samples[i] = (SDL_sinf(phase) > 0.0) ? BEEP_VOLUME : -BEEP_VOLUME;
+    }
+
+    SDL_PutAudioStreamData(stream, samples, sizeof (samples));
+
+    return;
 }
